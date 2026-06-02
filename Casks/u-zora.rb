@@ -7,8 +7,7 @@ cask "u-zora" do
   version "0.1.0"
   sha256 "01ccc1e128dcc37ce360c9384b7dbc1a6682edb7e002f7671e84975cc603ebbd"
 
-  url "https://github.com/iillyyaa1997/u-zora/releases/download/v#{version}/uZora-v#{version}.dmg",
-      verified: "github.com/iillyyaa1997/u-zora/"
+  url "https://github.com/iillyyaa1997/u-zora/releases/download/v#{version}/uZora-v#{version}.dmg"
   name "uZora"
   desc "Menu-bar health and resource-hog monitor for Apple Silicon Macs"
   homepage "https://github.com/iillyyaa1997/u-zora"
