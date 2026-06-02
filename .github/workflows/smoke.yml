@@ -1,0 +1,53 @@
+name: Cask smoke test
+
+on:
+  push:
+    paths:
+      - "Casks/**"
+      - ".github/workflows/smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Environment
+        run: |
+          brew --version | head -1
+          sw_vers
+
+      - name: Audit cask (DSL, url/sha format, depends_on symbols, livecheck)
+        run: brew audit --cask "$PWD/Casks/u-zora.rb"
+
+      - name: Style (advisory)
+        run: brew style "$PWD/Casks/u-zora.rb" || echo "::warning::brew style reported issues"
+
+      - name: Verify release DMG downloads + checksum matches cask
+        run: |
+          set -euxo pipefail
+          VERSION="$(awk -F'"' '/^  version /{print $2}' Casks/u-zora.rb)"
+          WANT="$(awk -F'"' '/^  sha256 /{print $2}' Casks/u-zora.rb)"
+          URL="https://github.com/iillyyaa1997/u-zora/releases/download/v${VERSION}/uZora-v${VERSION}.dmg"
+          curl -fsSL "$URL" -o /tmp/uz.dmg
+          GOT="$(shasum -a 256 /tmp/uz.dmg | awk '{print $1}')"
+          echo "version=$VERSION want=$WANT got=$GOT"
+          [ "$WANT" = "$GOT" ]
+
+      - name: Live install (auto-enables on macOS >= 26, the cask minimum)
+        run: |
+          set -euxo pipefail
+          MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
+          if [ "$MAJOR" -ge 26 ]; then
+            brew install --cask --no-quarantine "$PWD/Casks/u-zora.rb"
+            test -d "/Applications/uZora.app"
+            brew uninstall --cask "$PWD/Casks/u-zora.rb"
+            echo "Live install OK on macOS $(sw_vers -productVersion)."
+          else
+            echo "Runner is macOS $(sw_vers -productVersion); cask requires >= 26 (Tahoe)."
+            echo "Live install skipped — audit + checksum already validated the cask."
+          fi
