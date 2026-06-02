@@ -18,14 +18,17 @@ jobs:
 
       - name: Environment
         run: |
-          brew --version | head -1
+          brew --version
           sw_vers
 
-      - name: Audit cask (DSL, url/sha format, depends_on symbols, livecheck)
-        run: brew audit --cask "$PWD/Casks/u-zora.rb"
+      - name: Tap (audit/install need the cask by name, not by path)
+        run: brew tap iillyyaa1997/tap
+
+      - name: Audit cask
+        run: brew audit --cask iillyyaa1997/tap/u-zora
 
       - name: Style (advisory)
-        run: brew style "$PWD/Casks/u-zora.rb" || echo "::warning::brew style reported issues"
+        run: brew style iillyyaa1997/tap/u-zora || echo "::warning::brew style reported issues"
 
       - name: Verify release DMG downloads + checksum matches cask
         run: |
@@ -43,9 +46,9 @@ jobs:
           set -euxo pipefail
           MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
           if [ "$MAJOR" -ge 26 ]; then
-            brew install --cask --no-quarantine "$PWD/Casks/u-zora.rb"
+            brew install --cask --no-quarantine iillyyaa1997/tap/u-zora
             test -d "/Applications/uZora.app"
-            brew uninstall --cask "$PWD/Casks/u-zora.rb"
+            brew uninstall --cask iillyyaa1997/tap/u-zora
             echo "Live install OK on macOS $(sw_vers -productVersion)."
           else
             echo "Runner is macOS $(sw_vers -productVersion); cask requires >= 26 (Tahoe)."
