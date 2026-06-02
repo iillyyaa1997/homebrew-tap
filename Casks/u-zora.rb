@@ -5,7 +5,7 @@
 # which pulls the latest u-zora GitHub release (no cross-repo token).
 cask "u-zora" do
   version "0.1.0"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "01ccc1e128dcc37ce360c9384b7dbc1a6682edb7e002f7671e84975cc603ebbd"
 
   url "https://github.com/iillyyaa1997/u-zora/releases/download/v#{version}/uZora-v#{version}.dmg",
       verified: "github.com/iillyyaa1997/u-zora/"
