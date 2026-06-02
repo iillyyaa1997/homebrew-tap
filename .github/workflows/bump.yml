@@ -1,0 +1,55 @@
+name: Bump uZora cask
+
+# No PAT: this workflow lives in the tap and *pulls* the latest u-zora
+# release, committing with the tap's own GITHUB_TOKEN (same-repo push).
+on:
+  schedule:
+    - cron: "17 * * * *"      # hourly — bumps when a new release appears
+  workflow_dispatch:          # manual "bump now" button
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump cask to latest u-zora release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO="iillyyaa1997/u-zora"
+
+          # Latest published release. Empty before the first release (or
+          # while u-zora is still private and unreachable) -> no-op, no fail.
+          TAG="$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null || true)"
+          if [ -z "$TAG" ]; then
+            echo "No accessible u-zora release yet — nothing to bump."
+            exit 0
+          fi
+          VERSION="${TAG#v}"
+
+          # The release ships uZora-<tag>.dmg.sha256 = "<sha>  <file>".
+          tmp="$(mktemp -d)"
+          gh release download "$TAG" --repo "$REPO" \
+            --pattern '*.dmg.sha256' --dir "$tmp" --clobber
+          SHA="$(awk '{print $1}' "$tmp"/*.dmg.sha256)"
+          if [ -z "$SHA" ]; then
+            echo "Could not read sha256 from release asset." >&2
+            exit 1
+          fi
+
+          sed -i -E "s|^  version \".*\"|  version \"${VERSION}\"|" Casks/u-zora.rb
+          sed -i -E "s|^  sha256 \".*\"|  sha256 \"${SHA}\"|"     Casks/u-zora.rb
+
+          if git diff --quiet -- Casks/u-zora.rb; then
+            echo "Cask already at ${VERSION}."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "u-zora ${VERSION}"
+          git push
