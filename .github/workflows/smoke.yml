@@ -21,11 +21,14 @@ jobs:
           brew --version
           sw_vers
 
-      - name: Tap (audit/install need the cask by name, not by path)
+      - name: Tap
         run: brew tap iillyyaa1997/tap
 
-      - name: Audit cask
-        run: brew audit --cask iillyyaa1997/tap/u-zora
+      - name: Short name resolves after tap (bare 'u-zora', NO iillyyaa1997/tap/ prefix)
+        run: |
+          set -euxo pipefail
+          brew info  --cask u-zora
+          brew audit --cask u-zora
 
       - name: Style (advisory)
         run: brew style iillyyaa1997/tap/u-zora || echo "::warning::brew style reported issues"
@@ -41,16 +44,16 @@ jobs:
           echo "version=$VERSION want=$WANT got=$GOT"
           [ "$WANT" = "$GOT" ]
 
-      - name: Live install (auto-enables on macOS >= 26, the cask minimum)
+      - name: Live install via SHORT name (auto-enables on macOS >= 26)
         run: |
           set -euxo pipefail
           MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
           if [ "$MAJOR" -ge 26 ]; then
-            brew install --cask --no-quarantine iillyyaa1997/tap/u-zora
+            brew install --cask --no-quarantine u-zora
             test -d "/Applications/uZora.app"
-            brew uninstall --cask iillyyaa1997/tap/u-zora
-            echo "Live install OK on macOS $(sw_vers -productVersion)."
+            brew uninstall --cask u-zora
+            echo "Live install (short name) OK on macOS $(sw_vers -productVersion)."
           else
             echo "Runner is macOS $(sw_vers -productVersion); cask requires >= 26 (Tahoe)."
-            echo "Live install skipped — audit + checksum already validated the cask."
+            echo "Live install skipped — info/audit/checksum already validated the cask."
           fi
