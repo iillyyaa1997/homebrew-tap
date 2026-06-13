@@ -4,8 +4,8 @@
 # `version` + `sha256` are kept current by .github/workflows/bump.yml,
 # which pulls the latest u-zora GitHub release (no cross-repo token).
 cask "u-zora" do
-  version "0.1.1"
-  sha256 "7796a1d7eb87489fa5226d119b14f21973923380c44bf4b6ecd1b94c077dc959"
+  version "0.2.0"
+  sha256 "e1efb3a04552cf5ced265dc55278d51cd74a497474147f54184870aca3021269"
 
   url "https://github.com/iillyyaa1997/u-zora/releases/download/v#{version}/uZora-v#{version}.dmg"
   name "uZora"
